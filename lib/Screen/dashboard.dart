@@ -6,11 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class Dashboard extends StatefulWidget {
-  // final int userId;
-  // final String? nic; // Optional NIC (needed only at login)
-  // final bool? hasVoted;
+  final int userId;
+  final String userDivision;
+  final bool hasVoted;
+
  
-  const Dashboard({super.key});
+  const Dashboard({required this.userId,
+    required this.userDivision,
+    required this.hasVoted,});
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -23,18 +26,19 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
   bool hasVoted = false; // Initialize with default value
 
   @override
-  void initState() {
-    super.initState();
-    _initAnimation();
-    // Initialize hasVoted - you can set this based on your logic
-    // hasVoted = widget.hasVoted ?? false; // Uncomment when you have the parameter
-    
-    // _fetchUserDivision();
-    // Ensure UI rebuilds properly
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {});
-    });
-  }
+void initState() {
+  super.initState();
+  _initAnimation();
+
+  // ✅ Assign passed values to local state
+  userDivision = widget.userDivision;
+  hasVoted = widget.hasVoted;
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    setState(() {});
+  });
+}
+
 
   void _initAnimation() {
     _controller = AnimationController(
@@ -47,23 +51,7 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
     );
   }
 
-  // Future<void> _fetchUserDivision() async {
-  //   final url = Uri.parse('http://10.0.2.2:8080/api/division?nic=${widget.nic}');
-  //   try {
-  //     final response = await http.get(url);
-  //     if (response.statusCode == 200) {
-  //       final data = json.decode(response.body);
-  //       setState(() {
-  //         userDivision = data['division'] ?? "Division not found";
-  //       });
-  //     } else {
-  //       setState(() => userDivision = "User not found");
-  //     }
-  //   } catch (error) {
-  //     setState(() => userDivision = "Unknown");
-  //   }
-  // }
-
+ 
   @override
   void dispose() {
     _controller.dispose();
@@ -105,9 +93,8 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
                 const SizedBox(height: 300),
                 _buildContainer('election'.tr),
                 const SizedBox(height: 30),
-                hasVoted
-                    ? _buildThankYouButton()
-                    : _buildDivision(userDivision ?? "Loading..."),
+                widget.hasVoted ? _buildThankYouButton() : _buildDivision(widget.userDivision),
+
                 const SizedBox(height: 50),
                 hasVoted ? Container() : _buildVoteButton(),
               ],
@@ -159,7 +146,7 @@ class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMix
           // Navigate to candidate selection or other voting screen
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Candidatelist()),
+            MaterialPageRoute(builder: (context) => Candidatelist(userId: widget.userId,userDivision: widget.userDivision,)),
           );
           print('Vote button pressed for user: ');
         },

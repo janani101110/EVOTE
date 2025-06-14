@@ -1,25 +1,24 @@
+import 'dart:convert';
+
 import 'package:evote/Screen/vote.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Candidatelist extends StatefulWidget {
-  const Candidatelist({super.key});
+  final int userId;
+  final String userDivision;
+  const Candidatelist({super.key,required this.userId,required this.userDivision});
 
   @override
   State<Candidatelist> createState() => _CandidatelistState();
 }
 
 class _CandidatelistState extends State<Candidatelist> {
-  final List<Map<String, String>> candidates = [
-    {'name': 'Janantha Jayakantha', 'party': 'National Rabbit Congrass'},
-    {'name': 'Chandrakumara', 'party': 'United Brilliant Party'},
-    {'name': 'Anuhas Kapila', 'party': 'National SecondOver Party'},
-    {'name': 'Cocomelon', 'party': 'Sri Lanka Coconut Party'},
-    {'name': 'Candidate 5', 'party': 'Party E'},
-    {'name': 'Candidate 6', 'party': 'Party F'},
-  ];
-
+  List<Map<String, String>> candidates = [];
+bool isLoading = true;
   List<Map<String, String>> selectedCandidates = [];
 
   void _toggleSelection(Map<String, String> candidate) {
@@ -47,13 +46,59 @@ class _CandidatelistState extends State<Candidatelist> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => Vote(candidate: selectedCandidates,
+          builder: (context) => Vote(candidate: selectedCandidates,userId: widget.userId,userDivision:widget.userDivision,
             
           ),
         ),
       );
     }
   }
+  @override
+void initState() {
+  super.initState();
+  fetchCandidates();
+}
+
+void fetchCandidates() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+
+  if (token == null) {
+    SnackBar(content: Text("No auth token found. Please login again."));
+    return;
+  }
+
+  final response = await http.get(
+    Uri.parse('http://192.168.1.5:8080/api/voting/candidates'),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer $token", // 🔐 Include the token
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    if (data['success']) {
+      final List<dynamic> candidateData = data['data'];
+
+      setState(() {
+  candidates = candidateData.map<Map<String, String>>((c) {
+    return {
+      'name': c['candidateName'] ?? '',
+      'party': c['partyName'] ?? '',
+    };
+  }).toList();
+  isLoading = false;
+});
+    } else {
+      SnackBar(content: Text(data['message']));
+    }
+  } else if (response.statusCode == 403) {
+    SnackBar(content: Text("Access denied. Please login again."));
+  } else {
+    SnackBar(content: Text("Server error: ${response.statusCode}"));
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -87,12 +132,14 @@ class _CandidatelistState extends State<Candidatelist> {
             const SizedBox(height: 30),
 
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(15.0),
-                child: Column(
-                  children: List.generate(candidates.length, (index) {
-                    final candidate = candidates[index];
-                    final isSelected = selectedCandidates.contains(candidate);
+  child: isLoading
+      ? const Center(child: CircularProgressIndicator())
+      : SingleChildScrollView(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            children: List.generate(candidates.length, (index) {
+              final candidate = candidates[index];
+              final isSelected = selectedCandidates.contains(candidate);
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),

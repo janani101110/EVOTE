@@ -1,13 +1,25 @@
+import 'dart:convert';
+
 import 'package:evote/Screen/candidatelist.dart';
 import 'package:evote/Screen/dashboard.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Vote extends StatefulWidget {
+  final int userId;
+  final String userDivision; // ✅ Add this
   final List<Map<String, String>> candidate;
-  const Vote({super.key, required this.candidate});
+
+  const Vote({
+    super.key,
+    required this.candidate,
+    required this.userId,
+    required this.userDivision, // ✅ Add this
+  });
 
   @override
   State<Vote> createState() => _VoteState();
@@ -35,30 +47,61 @@ class _VoteState extends State<Vote> with TickerProviderStateMixin {
     );
   }
 
-  void _onSubmitPressed() {
-    setState(() {
-      showAnimation = true;
-    });
+  void _onSubmitPressed() async {
+    if (widget.candidate.isEmpty) return;
 
-    // Start the animation
-    _controller.repeat(reverse: true);
+    final selectedCandidateId = widget.candidate.first['id']; // ✅ ensure it's the actual ID
 
-    // Navigate back after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        // Navigate to Dashboard or wherever you want to go after voting
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        // Or navigate to a specific page:
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Dashboard(), // or Fistpage with hasVoted: true
-          ),
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please login again.")),
+      );
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://192.168.1.5:8080/api/voting/vote'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // ✅ Auth header
+        },
+        body: jsonEncode({'candidateId': selectedCandidateId}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (data['success']) {
+        setState(() => showAnimation = true);
+        _controller.repeat(reverse: true);
+
+        await Future.delayed(const Duration(seconds: 4));
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => Dashboard(
+                userId: widget.userId,
+                userDivision: widget.userDivision,
+                hasVoted: true,
+              ),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data['message'] ?? 'Failed to vote')),
         );
       }
-    });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
-
   @override
   void dispose() {
     _controller.dispose();
@@ -231,7 +274,7 @@ class _VoteState extends State<Vote> with TickerProviderStateMixin {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => Candidatelist(),
+                    builder: (context) => Candidatelist(userId: widget.userId,userDivision: widget.userDivision,),
                   ),
                 );
               },

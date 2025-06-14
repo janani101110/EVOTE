@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:evote/Screen/password.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
 
 class Validationform extends StatefulWidget {
@@ -18,24 +21,52 @@ class Validationform extends StatefulWidget {
 class _ValidationformState extends State<Validationform> {
   final TextEditingController _nicController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
- bool _isRegistered = false;
+  bool _isRegistered = false;
+  String _message = '';
 
-  void _handleRegistration() {
-    setState(() {
-      _isRegistered = true;
-    });
-   Future.delayed(const Duration(seconds: 3), () {
+  Future<void> _handleRegistration() async {
+    final String nic = _nicController.text.trim();
+    const String baseUrl = 'http://192.168.1.5:8080'; // Replace with your IP
+    final url = Uri.parse('$baseUrl/api/voting/validate-nic');
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"nic": nic}),
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      if (json['success'] == true) {
+        setState(() {
+          _isRegistered = true;
+          _message = json['message'];
+        });
+        Future.delayed(Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => Password(),
+            builder: (context) => Password(nic: nic,),
           ),
         );
       }
     });
-  } 
-
+  
+      } else {
+        setState(() {
+          _isRegistered = false;
+          _message = json['message'];
+        });
+      }
+    } else {
+      setState(() {
+        _message = 'Server error: ${response.statusCode}';
+      });
+    }
+  
+   
+  }
   @override
   void dispose() {
     _nicController.dispose();

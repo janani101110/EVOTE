@@ -5,6 +5,9 @@ import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
+ import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -18,12 +21,78 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
  bool _isRegistered = false;
 
-  void _handleRegistration() {
-    setState(() {
-      _isRegistered = true;
-    });
-    Navigator.push(context, MaterialPageRoute(builder:(context)=>Biometric()));
-  }  
+ 
+
+
+
+void _handleLogin() async {
+  final nic = _nicController.text.trim();
+  final password = _passwordController.text.trim();
+
+  if (nic.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("NIC and Password cannot be empty")),
+    );
+    return;
+  }
+
+  final url = Uri.parse('http://192.168.1.5:8080/api/voting/login');
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({"nic": nic, "password": password}),
+  );
+
+  if (response.statusCode == 200) {
+    final json = jsonDecode(response.body);
+
+    if (json['success'] == true) {
+      final token = json['data']['token'];
+      final user = json['data']['user'];
+
+      // ✅ Save token for use in future authenticated requests
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+
+      final userId = user['id'];
+      final division = user['division'] ?? {};
+final divisionName = division['divisionName'] ?? 'Unknown';
+final hasVoted = user['hasVoted'] ?? false;
+
+
+
+      setState(() {
+        _isRegistered = true;
+      });
+
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (mounted) {
+        Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (context) => Biometric(
+      userId: userId,
+      userDivision: divisionName,
+      hasVoted: hasVoted,
+    ),
+  ),
+);
+
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${json['message']}")),
+      );
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Server error: ${response.statusCode}')),
+    );
+  }
+}
+
+
 
   @override
   void dispose() {
@@ -86,7 +155,7 @@ class _LoginState extends State<Login> {
                 ),
                 const SizedBox(height: 40),
                 GestureDetector(
-                      onTap: _handleRegistration,
+                      onTap: _handleLogin,
                       child: Button(text: "log".tr),
                     )
               ],

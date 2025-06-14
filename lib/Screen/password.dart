@@ -1,13 +1,18 @@
+import 'dart:convert';
+
 import 'package:evote/Screen/login.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:lottie/lottie.dart';
 
 class Password extends StatefulWidget {
-  const Password({super.key});
+  final String nic;
+
+  const Password({super.key, required this.nic});
 
   @override
   State<Password> createState() => _PasswordState();
@@ -18,21 +23,53 @@ class _PasswordState extends State<Password> {
   final TextEditingController _passwordCController = TextEditingController();
  bool _isRegistered = false;
 
-  void _handleRegistration() {
-    setState(() {
-      _isRegistered = true;
-    });
-   Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Login(),
-          ),
-        );
-      }
-    });
-  } 
+  void _handlePassword() async {
+  final password = _passwordController.text.trim();
+  final confirmPassword = _passwordCController.text.trim();
+
+  if (password.isEmpty || confirmPassword.isEmpty || password != confirmPassword) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Passwords do not match or are empty")),
+    );
+    return;
+  }
+
+  final url = Uri.parse('http://192.168.1.5:8080/api/voting/set-password'); // Update with your backend IP
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      "nic": widget.nic,
+      "password": password,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final json = jsonDecode(response.body);
+    if (json['success'] == true) {
+      setState(() {
+        _isRegistered = true;
+      });
+
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => Login()),
+          );
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${json['message']}")),
+      );
+    }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Server error: ${response.statusCode}')),
+    );
+  }
+} 
 
   @override
   void dispose() {
@@ -43,7 +80,7 @@ class _PasswordState extends State<Password> {
    
   
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) { 
      return Scaffold(
       appBar: Navbar(),
       body: Stack(
@@ -97,7 +134,7 @@ class _PasswordState extends State<Password> {
                 ),
                 const SizedBox(height: 40),
                 GestureDetector(
-                      onTap: _handleRegistration,
+                      onTap: _handlePassword,
                       child: Button(text: "submit".tr),
                     )
               ],

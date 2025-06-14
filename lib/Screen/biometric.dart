@@ -1,10 +1,21 @@
+
+
 import 'package:evote/Screen/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 
 class Biometric extends StatefulWidget {
-  const Biometric({super.key});
+  final int userId;
+  final String userDivision;
+  final bool hasVoted;
+
+  const Biometric({
+    super.key,
+    required this.userId,
+    required this.userDivision,
+    required this.hasVoted,
+  });
 
   @override
   State<Biometric> createState() => _BiometricState();
@@ -48,24 +59,37 @@ class _BiometricState extends State<Biometric> {
   }
 
   Future<void> _authenticate() async {
-    try {
-      bool authenticated = await auth.stopAuthentication();
-      await auth.authenticate(
-        localizedReason: 'must MFA',
-        options: AuthenticationOptions(
-          stickyAuth: false,
-          biometricOnly: true,
+  try {
+    await auth.stopAuthentication();
+
+    final bool authenticated = await auth.authenticate(
+      localizedReason: 'Please authenticate to proceed',
+      options: const AuthenticationOptions(
+        biometricOnly: false, // ✅ Allow fallback to PIN/Pattern/Passcode
+        useErrorDialogs: true,
+        stickyAuth: true,
+      ),
+    );
+
+    if (authenticated && mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute( 
+          builder: (context) => Dashboard(
+            userId: widget.userId,
+            userDivision: widget.userDivision,
+            hasVoted: widget.hasVoted,
+          ),
         ),
       );
-      if (authenticated) {
-        Navigator.push(context,
-            MaterialPageRoute( builder: (context) => Dashboard()));
-      }
-      print("Authenticated: $authenticated");
-    } on PlatformException catch (e) {
-      print(e);
     }
+  } on PlatformException catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Authentication error: ${e.message}")),
+    );
   }
+}
+
 
   
 }
