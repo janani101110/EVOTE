@@ -36,7 +36,7 @@ void _handleLogin() async {
     return;
   }
 
-  final url = Uri.parse('http://192.168.1.5:8080/api/voting/login');
+  final url = Uri.parse('http://192.168.1.144:8080/api/voting/login');
   final response = await http.post(
     url,
     headers: {"Content-Type": "application/json"},

@@ -26,7 +26,7 @@ class _ValidationformState extends State<Validationform> {
 
   Future<void> _handleRegistration() async {
     final String nic = _nicController.text.trim();
-    const String baseUrl = 'http://192.168.1.5:8080'; // Replace with your IP
+    const String baseUrl = 'http://192.168.1.144:8080'; // Replace with your IP
     final url = Uri.parse('$baseUrl/api/voting/validate-nic');
 
     final response = await http.post(

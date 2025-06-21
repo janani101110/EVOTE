@@ -43,14 +43,16 @@ bool isLoading = true;
 
   void _confirmVote() {
     if (selectedCandidates.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => Vote(candidate: selectedCandidates,userId: widget.userId,userDivision:widget.userDivision,
-            
-          ),
-        ),
-      );
+     Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => Vote(
+      candidate: selectedCandidates, // 👈 already has id, name, and party
+      userId: widget.userId,
+      userDivision: widget.userDivision,
+    ),
+  ),
+);
     }
   }
   @override
@@ -69,7 +71,7 @@ void fetchCandidates() async {
   }
 
   final response = await http.get(
-    Uri.parse('http://192.168.1.5:8080/api/voting/candidates'),
+    Uri.parse('http://192.168.1.144:8080/api/voting/candidates'),
     headers: {
       "Content-Type": "application/json",
       "Authorization": "Bearer $token", // 🔐 Include the token
@@ -83,11 +85,13 @@ void fetchCandidates() async {
 
       setState(() {
   candidates = candidateData.map<Map<String, String>>((c) {
-    return {
-      'name': c['candidateName'] ?? '',
-      'party': c['partyName'] ?? '',
-    };
-  }).toList();
+  return {
+    'id': c['id'].toString(), // ✅ Add this line
+    'name': c['candidateName'] ?? '',
+    'party': c['partyName'] ?? '',
+  };
+}).toList();
+
   isLoading = false;
 });
     } else {

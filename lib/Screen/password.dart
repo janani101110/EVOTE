@@ -34,7 +34,7 @@ class _PasswordState extends State<Password> {
     return;
   }
 
-  final url = Uri.parse('http://192.168.1.5:8080/api/voting/set-password'); // Update with your backend IP
+  final url = Uri.parse('http://192.168.1.144:8080/api/voting/set-password'); // Update with your backend IP
   final response = await http.post(
     url,
     headers: {"Content-Type": "application/json"},

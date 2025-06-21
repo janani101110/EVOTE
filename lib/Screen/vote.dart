@@ -47,61 +47,84 @@ class _VoteState extends State<Vote> with TickerProviderStateMixin {
     );
   }
 
-  void _onSubmitPressed() async {
-    if (widget.candidate.isEmpty) return;
+ void _onSubmitPressed() async {
+  if (widget.candidate.isEmpty) return;
 
-    final selectedCandidateId = widget.candidate.first['id']; // ✅ ensure it's the actual ID
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+  print("🔐 Token: $token");
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+  if (token == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please login again.")),
+    );
+    return;
+  }
 
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please login again.")),
-      );
-      return;
-    }
+  try {
+    final response = await http.post(
+      Uri.parse('http://192.168.1.144:8080/api/voting/vote'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+  "candidateIds": widget.candidate.map((c) => int.parse(c["id"]!)).toList(),
+  "userId": widget.userId,
+  "userDivision": widget.userDivision,
+}),
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://192.168.1.5:8080/api/voting/vote'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token', // ✅ Auth header
-        },
-        body: jsonEncode({'candidateId': selectedCandidateId}),
-      );
+    );
 
-      final data = jsonDecode(response.body);
-      if (data['success']) {
-        setState(() => showAnimation = true);
-        _controller.repeat(reverse: true);
+    print("📡 Status Code: ${response.statusCode}");
+    print("📦 Response Body: '${response.body}'");
 
-        await Future.delayed(const Duration(seconds: 4));
+    if (response.statusCode == 200 || response.statusCode == 400 || response.statusCode == 403) {
+      if (response.body.isNotEmpty) {
+        final data = jsonDecode(response.body);
 
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => Dashboard(
-                userId: widget.userId,
-                userDivision: widget.userDivision,
-                hasVoted: true,
+        if (data['success']) {
+          setState(() => showAnimation = true);
+          _controller.repeat(reverse: true);
+
+          await Future.delayed(const Duration(seconds: 4));
+
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => Dashboard(
+                  userId: widget.userId,
+                  userDivision: widget.userDivision,
+                  hasVoted: true,
+                ),
               ),
-            ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Failed to vote')),
           );
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Failed to vote')),
+          const SnackBar(content: Text('Server returned empty response.')),
         );
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('HTTP Error: ${response.statusCode}')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Exception: $e')),
+    );
   }
+}
+
+
+  
   @override
   void dispose() {
     _controller.dispose();
