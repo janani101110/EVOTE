@@ -1,6 +1,9 @@
 
 
-import 'package:evote/Screen/dashboard.dart';
+import 'package:evote/Screen/mobile/dashboard.dart';
+import 'package:evote/widget/background.dart';
+import 'package:evote/widget/button.dart';
+import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
@@ -40,19 +43,33 @@ class _BiometricState extends State<Biometric> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          if (_supportState)
-            const Text('This is supported')
-          else
-            const Text('not supported'),
-          const Divider(height: 100),
-          
-          ElevatedButton(
-            onPressed: _authenticate,
-            child: Text('Click to authenticate'),
-          )
+      appBar: Navbar(),
+      body: Stack(
+        children: [
+          Background(),
+Center(
+  child: Column(
+    mainAxisSize: MainAxisSize.max,
+    children: [
+      const SizedBox(height: 245),
+
+      _supportState
+          ? const Text('This is supported',style: TextStyle(color: Colors.purple,fontSize: 20,fontWeight: FontWeight.bold),)
+          : const Text('not supported'),
+      const SizedBox(height: 20),
+      const Icon(
+        Icons.fingerprint,
+        size: 100,
+        color: Colors.purpleAccent,
+      ),
+      const SizedBox(height: 80),
+      Button(
+        onPressed: _authenticate,
+        text: 'Click to authenticate',
+      ),
+    ],
+  ),
+),
         ],
       ),
     );

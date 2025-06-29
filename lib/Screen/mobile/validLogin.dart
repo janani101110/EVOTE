@@ -1,5 +1,5 @@
-import 'package:evote/Screen/login.dart';
-import 'package:evote/Screen/validationForm.dart';
+import 'package:evote/Screen/mobile/login.dart';
+import 'package:evote/Screen/mobile/validationForm.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
 import 'package:evote/widget/navbar.dart';

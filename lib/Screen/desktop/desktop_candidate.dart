@@ -1,27 +1,28 @@
-import 'dart:convert';
-
-import 'package:evote/Screen/vote.dart';
+import 'package:evote/Screen/desktop/desktop_vote.dart';
+import 'package:evote/widget/background.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
-class Candidatelist extends StatefulWidget {
-  final int userId;
-  final String userDivision;
-  const Candidatelist({super.key,required this.userId,required this.userDivision});
+class DesktopCandidate extends StatefulWidget {
+  const DesktopCandidate({super.key});
 
   @override
-  State<Candidatelist> createState() => _CandidatelistState();
+  State<DesktopCandidate> createState() => _DesktopCandidateState();
 }
 
-class _CandidatelistState extends State<Candidatelist> {
-  List<Map<String, String>> candidates = [];
-bool isLoading = true;
+class _DesktopCandidateState extends State<DesktopCandidate> {
+ final List<Map<String, String>> candidates = [
+    {'name': 'Janantha Jayakantha', 'party': 'National Rabbit Congrass'},
+    {'name': 'Chandrakumara', 'party': 'United Brilliant Party'},
+    {'name': 'Anuhas Kapila', 'party': 'National SecondOver Party'},
+    {'name': 'Cocomelon', 'party': 'Sri Lanka Coconut Party'},
+    {'name': 'Candidate 5', 'party': 'Party E'},
+    {'name': 'Candidate 6', 'party': 'Party F'},
+  ];
+
   List<Map<String, String>> selectedCandidates = [];
 
-  void _toggleSelection(Map<String, String> candidate) {
+  void _castVote(Map<String, String> candidate) {
     setState(() {
       if (selectedCandidates.contains(candidate)) {
         selectedCandidates.remove(candidate);
@@ -29,10 +30,9 @@ bool isLoading = true;
         if (selectedCandidates.length < 3) {
           selectedCandidates.add(candidate);
         } else {
-          // Show a message when more than 3 are selected
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('You can select only 3 candidates'),
+              content: Text('You can select up to 3 candidates'),
               duration: Duration(seconds: 2),
             ),
           );
@@ -43,80 +43,66 @@ bool isLoading = true;
 
   void _confirmVote() {
     if (selectedCandidates.isNotEmpty) {
-     Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => Vote(
-      candidate: selectedCandidates, // 👈 already has id, name, and party
-      userId: widget.userId,
-      userDivision: widget.userDivision,
-    ),
-  ),
-);
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DesktopVote(),
+        ),
+      );
     }
   }
-  @override
-void initState() {
-  super.initState();
-  fetchCandidates();
-}
-
-void fetchCandidates() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
-
-  if (token == null) {
-    SnackBar(content: Text("No auth token found. Please login again."));
-    return;
-  }
-
-  final response = await http.get(
-    Uri.parse('http://192.168.1.144:8080/api/voting/candidates'),
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer $token", // 🔐 Include the token
-    },
-  );
-
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    if (data['success']) {
-      final List<dynamic> candidateData = data['data'];
-
-      setState(() {
-  candidates = candidateData.map<Map<String, String>>((c) {
-  return {
-    'id': c['id'].toString(), // ✅ Add this line
-    'name': c['candidateName'] ?? '',
-    'party': c['partyName'] ?? '',
-  };
-}).toList();
-
-  isLoading = false;
-});
-    } else {
-      SnackBar(content: Text(data['message']));
-    }
-  } else if (response.statusCode == 403) {
-    SnackBar(content: Text("Access denied. Please login again."));
-  } else {
-    SnackBar(content: Text("Server error: ${response.statusCode}"));
-  }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: Navbar(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
+      appBar:  Navbar(),
+      body: Stack(
+        children: [
+          const Background(),
+           Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 30),
+            Container(
+              width: double.infinity,
+              height: 150,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color.fromRGBO(111, 44, 145, 1),
+                    Color.fromRGBO(199, 1, 127, 1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  const SizedBox(width: 130),
+                  const Text(
+                    'Presidential Election 2024',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(width: 400),
+                  SizedBox(
+                    width: 200,
+                    height: 150,
+                    child: Image.asset('assets/pol.png', fit: BoxFit.fill),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 50),
             Center(
               child: Text(
-                'candi1'.tr,
+                'Select Your Candidate For Presidential Election 2024',
                 style: TextStyle(
                   color: Color.fromRGBO(111, 44, 145, 1),
                   fontSize: 20,
@@ -124,31 +110,19 @@ void fetchCandidates() async {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            Text(
-              'election'.tr,
-              style: TextStyle(
-                color: Color.fromRGBO(111, 44, 145, 1),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             const SizedBox(height: 30),
-
             Expanded(
-  child: isLoading
-      ? const Center(child: CircularProgressIndicator())
-      : SingleChildScrollView(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            children: List.generate(candidates.length, (index) {
-              final candidate = candidates[index];
-              final isSelected = selectedCandidates.contains(candidate);
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(
+                  children: List.generate(candidates.length, (index) {
+                    final candidate = candidates[index];
+                    final isSelected = selectedCandidates.contains(candidate);
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),
                       child: InkWell(
-                        onTap: () => _toggleSelection(candidate),
+                        onTap: () => _castVote(candidate),
                         child: Container(
                           padding: const EdgeInsets.all(25.0),
                           decoration: BoxDecoration(
@@ -167,29 +141,26 @@ void fetchCandidates() async {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Display the dynamic number based on `isSelected` state
                               Text(
                                 isSelected
                                     ? (selectedCandidates.indexOf(candidate) + 1)
                                         .toString()
-                                    : '', // Display rank based on selection order
+                                    : '',
                                 style: TextStyle(
                                   fontSize: 30,
                                   color: isSelected ? Colors.green : Colors.grey,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 10), // Adjust space between number and icon
-
-                              // Icon to represent the selection state
+                              const SizedBox(width: 10),
                               Icon(
-                                isSelected ? Icons.numbers_rounded : Icons.circle_outlined,
+                                isSelected
+                                    ? Icons.check_circle
+                                    : Icons.circle_outlined,
                                 size: 30,
                                 color: isSelected ? Colors.green : Colors.grey,
                               ),
-                              const SizedBox(width: 20), // Space between icon and candidate name
-
-                              // Column displaying candidate's name and party
+                              const SizedBox(width: 200),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -219,8 +190,6 @@ void fetchCandidates() async {
                 ),
               ),
             ),
-
-            // Confirm Button
             ElevatedButton(
               onPressed: selectedCandidates.isNotEmpty ? _confirmVote : null,
               style: ElevatedButton.styleFrom(
@@ -236,7 +205,7 @@ void fetchCandidates() async {
             ),
           ],
         ),
-      ),
+     ] ),
     );
   }
 }

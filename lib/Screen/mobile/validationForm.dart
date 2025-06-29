@@ -1,8 +1,9 @@
 import 'dart:convert';
 
-import 'package:evote/Screen/password.dart';
+import 'package:evote/Screen/mobile/password.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
+import 'package:evote/widget/customTextFormField.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -22,7 +23,6 @@ class _ValidationformState extends State<Validationform> {
   final TextEditingController _nicController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   bool _isRegistered = false;
-  String _message = '';
 
   Future<void> _handleRegistration() async {
     final String nic = _nicController.text.trim();
@@ -40,7 +40,6 @@ class _ValidationformState extends State<Validationform> {
       if (json['success'] == true) {
         setState(() {
           _isRegistered = true;
-          _message = json['message'];
         });
         Future.delayed(Duration(seconds: 3), () {
       if (mounted) {
@@ -56,12 +55,10 @@ class _ValidationformState extends State<Validationform> {
       } else {
         setState(() {
           _isRegistered = false;
-          _message = json['message'];
         });
       }
     } else {
       setState(() {
-        _message = 'Server error: ${response.statusCode}';
       });
     }
   
@@ -142,45 +139,3 @@ class _ValidationformState extends State<Validationform> {
   }
 
 }
-class CustomTextFormField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final String labelText;
-
-  const CustomTextFormField({
-    super.key,
-    required this.controller,
-    required this.hintText,
-    required this.labelText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 280,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hintText,
-          labelText: labelText,
-          filled: true,
-          fillColor: Colors.white,
-          border: const OutlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-}
-      

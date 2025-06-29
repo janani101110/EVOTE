@@ -1,4 +1,7 @@
-import 'package:evote/Screen/language.dart';
+import 'dart:io';
+
+import 'package:evote/Screen/adminLogin.dart';
+import 'package:evote/Screen/mobile/language.dart';
 import 'package:evote/localString.dart';
 import 'package:evote/widget/background.dart';
 import 'package:flutter/material.dart';
@@ -44,12 +47,24 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     // Wait for 3 seconds and navigate to Login
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Language()),
-      );
+      // Check if the platform is mobile or web
+      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+        // For web, you can navigate differently or show a different page
+        // For now, navigating to the same Language screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Adminlogin()),
+        );
+      } else {
+        // For mobile, navigate to the same Language screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Language()),
+        );
+      }
     });
   }
+
  
   @override
   Widget build(BuildContext context) {

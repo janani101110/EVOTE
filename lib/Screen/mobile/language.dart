@@ -1,4 +1,4 @@
-import 'package:evote/Screen/validLogin.dart';
+import 'package:evote/Screen/mobile/validLogin.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:evote/widget/button.dart'; // Import your Button widget

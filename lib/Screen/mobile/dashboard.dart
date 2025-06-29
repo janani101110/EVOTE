@@ -1,5 +1,5 @@
 // import 'dart:convert';
-import 'package:evote/Screen/candidatelist.dart';
+import 'package:evote/Screen/mobile/candidatelist.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';

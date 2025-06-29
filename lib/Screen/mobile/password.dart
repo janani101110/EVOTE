@@ -1,8 +1,9 @@
 import 'dart:convert';
 
-import 'package:evote/Screen/login.dart';
+import 'package:evote/Screen/mobile/login.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
+import 'package:evote/widget/customTextFormField.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -145,44 +146,3 @@ class _PasswordState extends State<Password> {
     );
   }
   }
-class CustomTextFormField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hintText;
-  final String labelText;
-
-  const CustomTextFormField({
-    super.key,
-    required this.controller,
-    required this.hintText,
-    required this.labelText,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 280,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hintText,
-          labelText: labelText,
-          filled: true,
-          fillColor: Colors.white,
-          border: const OutlineInputBorder(
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-    );
-  }
-}
