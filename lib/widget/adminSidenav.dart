@@ -15,8 +15,8 @@ class _AdminsidenavState extends State<Adminsidenav> {
   final List<String> navItems = [
     'Dashboard',
     'Candidates',
-    'Elections',
-    'Parties',
+    
+    'Divisions',
     'Voters',
     'Admins',
     'Results',
@@ -27,7 +27,7 @@ class _AdminsidenavState extends State<Adminsidenav> {
     return Container(
       width: 250,
       height: double.infinity,
-      color: const Color(0xFF1A1A2E), // Dark sidebar background
+      color: const Color.fromARGB(255, 32, 6, 92), // Dark sidebar background
       child: Column(
         children: [
           Container(

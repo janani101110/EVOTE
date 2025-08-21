@@ -7,8 +7,8 @@ class Piechart extends StatelessWidget {
 
   const Piechart({
     super.key,
-    this.totalVoters = 1000,
-    this.votesCast = 750,
+    required this.totalVoters,
+    required this.votesCast ,
   });
 
   @override
@@ -19,13 +19,13 @@ class Piechart extends StatelessWidget {
     };
 
     return SizedBox(
-      height: 400,
+      height: 300,
       width: 400,
       child: PieChart(
         dataMap: dataMap,
         animationDuration: const Duration(milliseconds: 800),
-        chartRadius: 300,
-        colorList: [Colors.orange, Colors.grey.shade300],
+        chartRadius: 200,
+        colorList: [const Color.fromARGB(255, 250, 147, 12), Colors.grey.shade300],
         chartType: ChartType.disc,
         ringStrokeWidth: 32,
         legendOptions: const LegendOptions(

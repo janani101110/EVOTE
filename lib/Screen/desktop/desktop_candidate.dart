@@ -94,7 +94,7 @@ class _DesktopCandidateState extends State<DesktopCandidate> {
                   SizedBox(
                     width: 200,
                     height: 150,
-                    child: Image.asset('assets/pol.png', fit: BoxFit.fill),
+                    child: Image.asset('assets/bannerimg.png', fit: BoxFit.fill),
                   ),
                 ],
               ),

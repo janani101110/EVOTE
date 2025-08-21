@@ -1,5 +1,8 @@
 // import 'dart:convert';
 import 'package:evote/Screen/mobile/candidatelist.dart';
+import 'package:evote/Screen/mobile/language.dart';
+import 'package:evote/services/mobile/loginService.dart';
+import 'package:evote/services/services.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
@@ -10,35 +13,36 @@ class Dashboard extends StatefulWidget {
   final String userDivision;
   final bool hasVoted;
 
- 
-  const Dashboard({required this.userId,
+  const Dashboard({
+    required this.userId,
     required this.userDivision,
-    required this.hasVoted,});
+    required this.hasVoted,
+  });
 
   @override
   State<Dashboard> createState() => _DashboardState();
 }
 
-class _DashboardState extends State<Dashboard> with SingleTickerProviderStateMixin {
+class _DashboardState extends State<Dashboard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   String? userDivision;
   bool hasVoted = false; // Initialize with default value
 
   @override
-void initState() {
-  super.initState();
-  _initAnimation();
+  void initState() {
+    super.initState();
+    _initAnimation();
 
-  // ✅ Assign passed values to local state
-  userDivision = widget.userDivision;
-  hasVoted = widget.hasVoted;
+    // ✅ Assign passed values to local state
+    userDivision = widget.userDivision;
+    hasVoted = widget.hasVoted;
 
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    setState(() {});
-  });
-}
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {});
+    });
+  }
 
   void _initAnimation() {
     _controller = AnimationController(
@@ -46,17 +50,48 @@ void initState() {
       vsync: this,
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
- 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
+void _logout() async {
+  final authService = LoginService(baseUrl: baseUrl);
+
+  try {
+    final result = await authService.logout();
+
+    if (mounted) {
+      // Check if result contains success key and it's true
+      final bool success = result['success'] == true;
+
+      if(success){
+         Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Language()),
+        (route) => false,
+      );
+      }
+     
+    }
+  } catch (e) {
+    if (mounted) {
+      // Still navigate to login screen on error
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Language()),
+        (route) => false,
+      );
+    }
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -93,10 +128,12 @@ void initState() {
                 const SizedBox(height: 300),
                 _buildContainer('election'.tr),
                 const SizedBox(height: 30),
-                widget.hasVoted ? _buildThankYouButton() : _buildDivision(widget.userDivision),
+                widget.hasVoted
+                    ? _buildThankYouButton()
+                    : _buildDivision(widget.userDivision),
 
                 const SizedBox(height: 50),
-                hasVoted ? Container() : _buildVoteButton(),
+                hasVoted ? _buildlogout() : _buildVoteButton(),
               ],
             ),
           ),
@@ -112,7 +149,10 @@ void initState() {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color.fromRGBO(111, 44, 145, 1), Color.fromRGBO(199, 1, 127, 1)],
+          colors: [
+            Color.fromRGBO(111, 44, 145, 1),
+            Color.fromRGBO(199, 1, 127, 1),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -132,33 +172,65 @@ void initState() {
     return _buildContainer(text);
   }
 
+  Widget _buildlogout() {
+    return ElevatedButton(
+      onPressed: _logout,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.purple,
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Center(
+        child: Text(
+          'tnk'.tr,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildVoteButton() {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: child,
-        );
+        return Transform.scale(scale: _scaleAnimation.value, child: child);
       },
       child: ElevatedButton(
         onPressed: () {
           // Navigate to candidate selection or other voting screen
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => Candidatelist(userId: widget.userId,userDivision: widget.userDivision,)),
+            MaterialPageRoute(
+              builder:
+                  (context) => Candidatelist(
+                    userId: widget.userId,
+                    userDivision: widget.userDivision,
+                  ),
+            ),
           );
           print('Vote button pressed for user: ');
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.purple,
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: Center(
           child: Text(
             'vote1'.tr,
-            style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),

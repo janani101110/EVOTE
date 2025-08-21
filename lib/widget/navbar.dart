@@ -17,23 +17,23 @@ class _NavbarState extends State<Navbar> {
       backgroundColor: const Color.fromARGB(0, 249, 248, 248),
       elevation: 0,
       
-      automaticallyImplyLeading: false, // Removes default back button
+      automaticallyImplyLeading: false, 
       title: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Row(
           children: [
-            // Left: Logo
+            
             Container(
               padding: const EdgeInsets.all(4),
               child: Image.asset(
-                'assets/logo.png', // Replace with your logo path
+                'assets/logo.png', 
                 height: 45,
                 width: 45,
                 fit: BoxFit.contain,
               ),
             ),
             
-            const SizedBox(width: 16), // Space between logo and text
+            const SizedBox(width: 16), 
             
             // Center: Three language texts
             Expanded(
@@ -72,8 +72,7 @@ class _NavbarState extends State<Navbar> {
               ),
             ),
             
-            // Right: Space for additional items (logout button, etc.)
-            // You can add more widgets here if needed
+            
           ],
         ),
       ),

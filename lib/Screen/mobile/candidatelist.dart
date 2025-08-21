@@ -1,17 +1,20 @@
-import 'dart:convert';
 
 import 'package:evote/Screen/mobile/vote.dart';
+import 'package:evote/services/mobile/candidateService.dart';
+import 'package:evote/services/services.dart';
 import 'package:evote/widget/button.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Candidatelist extends StatefulWidget {
   final int userId;
   final String userDivision;
-  const Candidatelist({super.key,required this.userId,required this.userDivision});
+  const Candidatelist({
+    super.key,
+    required this.userId,
+    required this.userDivision,
+  });
 
   @override
   State<Candidatelist> createState() => _CandidatelistState();
@@ -19,7 +22,7 @@ class Candidatelist extends StatefulWidget {
 
 class _CandidatelistState extends State<Candidatelist> {
   List<Map<String, String>> candidates = [];
-bool isLoading = true;
+  bool isLoading = true;
   List<Map<String, String>> selectedCandidates = [];
 
   void _toggleSelection(Map<String, String> candidate) {
@@ -43,65 +46,81 @@ bool isLoading = true;
   }
 
   void _confirmVote() {
-    if (selectedCandidates.isNotEmpty) {
-     Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => Vote(
-      candidate: selectedCandidates, // 👈 already has id, name, and party
-      userId: widget.userId,
-      userDivision: widget.userDivision,
-    ),
-  ),
-);
-    }
+  if (selectedCandidates.isNotEmpty) {
+    // Attach rank (1-based) according to the selection order
+    final withRank = selectedCandidates.asMap().entries.map((entry) {
+      final c = Map<String, String>.from(entry.value);
+      c['rank'] = (entry.key + 1).toString(); // 👈 rank 1, 2, 3
+      return c;
+    }).toList();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Vote(
+          candidate: withRank,               // 👈 pass with rank
+          userId: widget.userId,
+          userDivision: widget.userDivision,
+        ),
+      ),
+    );
   }
-  @override
-void initState() {
-  super.initState();
-  fetchCandidates();
 }
 
-void fetchCandidates() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
 
-  if (token == null) {
-    SnackBar(content: Text("No auth token found. Please login again."));
-    return;
+  @override
+  void initState() {
+    super.initState();
+    fetchCandidates();
   }
 
-  final response = await http.get(
-    Uri.parse('http://192.168.1.144:8080/api/voting/candidates'),
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer $token", // 🔐 Include the token
-    },
-  );
+  void fetchCandidates() async {
+  try {
+    // Create instance of the service
+    final candidateService = CandidateService(baseUrl: baseUrl);
+    
+    // Use the service method to get token
+    final token = await candidateService.getAuthToken();
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    if (data['success']) {
-      final List<dynamic> candidateData = data['data'];
+    if (token == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("No auth token found. Please login again.")),
+        );
+      }
+      return;
+    }
+
+    // Use the service method to fetch candidates
+    final result = await candidateService.fetchCandidates(token);
+
+    if (result['success'] == true) {
+      final List<dynamic> candidateData = result['data'];
 
       setState(() {
-  candidates = candidateData.map<Map<String, String>>((c) {
-  return {
-    'id': c['id'].toString(), // ✅ Add this line
-    'name': c['candidateName'] ?? '',
-    'party': c['partyName'] ?? '',
-  };
-}).toList();
-
-  isLoading = false;
-});
+        candidates = candidateData.map<Map<String, String>>((c) {
+          return {
+            'id': c['id'].toString(),
+            'name': c['candidateName'] ?? '',
+            'party': c['partyName'] ?? '',
+          };
+        }).toList();
+        isLoading = false;
+      });
     } else {
-      SnackBar(content: Text(data['message']));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? "Failed to fetch candidates")),
+        );
+      }
     }
-  } else if (response.statusCode == 403) {
-    SnackBar(content: Text("Access denied. Please login again."));
-  } else {
-    SnackBar(content: Text("Server error: ${response.statusCode}"));
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+    setState(() => isLoading = false);
   }
 }
 
@@ -109,127 +128,141 @@ void fetchCandidates() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Navbar(),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 30),
-            Center(
-              child: Text(
-                'candi1'.tr,
-                style: TextStyle(
-                  color: Color.fromRGBO(111, 44, 145, 1),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight,
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'election'.tr,
-              style: TextStyle(
-                color: Color.fromRGBO(111, 44, 145, 1),
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            Expanded(
-  child: isLoading
-      ? const Center(child: CircularProgressIndicator())
-      : SingleChildScrollView(
-          padding: const EdgeInsets.all(15.0),
-          child: Column(
-            children: List.generate(candidates.length, (index) {
-              final candidate = candidates[index];
-              final isSelected = selectedCandidates.contains(candidate);
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 15.0),
-                      child: InkWell(
-                        onTap: () => _toggleSelection(candidate),
-                        child: Container(
-                          padding: const EdgeInsets.all(25.0),
-                          decoration: BoxDecoration(
-                            color: isSelected ? Colors.green[100] : Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color.fromRGBO(111, 44, 145, 1)
-                                    .withOpacity(0.5),
-                                spreadRadius: 1,
-                                blurRadius: 3,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Display the dynamic number based on `isSelected` state
-                              Text(
-                                isSelected
-                                    ? (selectedCandidates.indexOf(candidate) + 1)
-                                        .toString()
-                                    : '', // Display rank based on selection order
-                                style: TextStyle(
-                                  fontSize: 30,
-                                  color: isSelected ? Colors.green : Colors.grey,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 10), // Adjust space between number and icon
-
-                              // Icon to represent the selection state
-                              Icon(
-                                isSelected ? Icons.numbers_rounded : Icons.circle_outlined,
-                                size: 30,
-                                color: isSelected ? Colors.green : Colors.grey,
-                              ),
-                              const SizedBox(width: 20), // Space between icon and candidate name
-
-                              // Column displaying candidate's name and party
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    candidate['name']!,
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    candidate['party']!,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+              child: Padding(
+                padding: const EdgeInsets.all(16.0), // Reduced padding
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 20),
+                    // Header Section
+                    Column(
+                      children: [
+                        Text(
+                          'candi1'.tr,
+                          style: TextStyle(
+                            color: Color.fromRGBO(111, 44, 145, 1),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'election'.tr,
+                          style: TextStyle(
+                            color: Color.fromRGBO(111, 44, 145, 1),
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Candidates List
+                    isLoading
+                        ? SizedBox(
+                            height: constraints.maxHeight * 0.6,
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: candidates.length,
+                            itemBuilder: (context, index) {
+                              final candidate = candidates[index];
+                              final isSelected = selectedCandidates.contains(candidate);
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: InkWell(
+                                  onTap: () => _toggleSelection(candidate),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16.0), // Reduced padding
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? Colors.green[100] : Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color.fromRGBO(111, 44, 145, 1)
+                                              .withOpacity(0.5),
+                                          spreadRadius: 1,
+                                          blurRadius: 3,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        if (isSelected)
+                                          Text(
+                                            (selectedCandidates.indexOf(candidate) + 1)
+                                                .toString(),
+                                            style: TextStyle(
+                                              fontSize: 24,
+                                              color: Colors.green,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        SizedBox(width: isSelected ? 10 : 0),
+                                        Icon(
+                                          isSelected ? Icons.numbers_rounded : Icons.circle_outlined,
+                                          size: 24,
+                                          color: isSelected ? Colors.green : Colors.grey,
+                                        ),
+                                        SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                candidate['name']!,
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              SizedBox(height: 4),
+                                              Text(
+                                                candidate['party']!,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey[600],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                    // Spacer and Button
+                    SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20.0),
+                      child: Button(
+                        text: 'Confirm Vote',
+                        onPressed: _confirmVote ,
+                        // isCancel: selectedCandidates.isNotEmpty,
                       ),
-                    );
-                  }),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-            // Confirm Button
-            Button(
-  text: 'Confirm Vote',
-  onPressed: selectedCandidates.isNotEmpty ? _confirmVote : null, // Disable button if candidates are empty
-  isCancel: selectedCandidates.isNotEmpty, // Pass isEnabled based on selectedCandidates
-)
-
-          ],
-        ),
+          );
+        },
       ),
     );
   }

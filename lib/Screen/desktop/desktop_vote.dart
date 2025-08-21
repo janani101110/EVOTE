@@ -2,6 +2,7 @@ import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 
 class DesktopVote extends StatefulWidget {
+  // final List<String> candidate;
   const DesktopVote({super.key});
 
   @override
@@ -9,6 +10,12 @@ class DesktopVote extends StatefulWidget {
 }
 
 class _DesktopVoteState extends State<DesktopVote> {
+  final List<Map<String, String>> candidate = [
+    {'name': 'Alice Johnson', 'party': 'Party A'},
+    {'name': 'Bob Smith', 'party': 'Party B'},
+    {'name': 'Carol Lee', 'party': 'Party C'},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,43 +37,43 @@ class _DesktopVoteState extends State<DesktopVote> {
             const SizedBox(height: 40),
 
             // Candidate List
-            // Expanded(
-            //   child: ListView.builder(
-            //     itemCount: candidate.length,
-            //     itemBuilder: (context, index) {
-            //       final c = candidate[index];
-            //       return Card(
-            //         elevation: 5,
-            //         shape: RoundedRectangleBorder(
-            //           borderRadius: BorderRadius.circular(15),
-            //         ),
-            //         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            //         child: ListTile(
-            //           contentPadding: const EdgeInsets.all(20),
-            //           leading: const Icon(
-            //             Icons.account_circle,
-            //             size: 60,
-            //             color: Color.fromRGBO(111, 44, 145, 1),
-            //           ),
-            //           title: Text(
-            //             c['name'] ?? '',
-            //             style: const TextStyle(
-            //               fontSize: 22,
-            //               fontWeight: FontWeight.bold,
-            //             ),
-            //           ),
-            //           subtitle: Text(
-            //             c['party'] ?? '',
-            //             style: const TextStyle(
-            //               fontSize: 18,
-            //               color: Colors.grey,
-            //             ),
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //   ),
-            // ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: candidate.length,
+                itemBuilder: (context, index) {
+                  final c = candidate[index];
+                  return Card(
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(20),
+                      leading: const Icon(
+                        Icons.account_circle,
+                        size: 60,
+                        color: Color.fromRGBO(111, 44, 145, 1),
+                      ),
+                      title: Text(
+                        c['name'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        c['party'] ?? '',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
 
             const SizedBox(height: 30),
 

@@ -18,6 +18,7 @@ class Localstrings extends Translations {
        'submit':'Submit',
        'cancel':'Cancel',
        'vote3':'You Have Voted Successfully',//votedone
+       'tnk':'Logout',
     },
     'si_LK':{
       'reg':'වලංගු කරන්න',
@@ -33,6 +34,7 @@ class Localstrings extends Translations {
        'submit':'ඇතුල් කරන්න',
        'cancel':'අවලංගු කරන්න',
        'vote3':'ඔබ සාර්ථකව ඡන්දය ප්‍රකාශ කර ඇත.',//votedone
+       'tnk':'පිටවීම',
     }
   };
   

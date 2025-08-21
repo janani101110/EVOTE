@@ -1,14 +1,13 @@
-import 'dart:convert';
 
 import 'package:evote/Screen/mobile/candidatelist.dart';
 import 'package:evote/Screen/mobile/dashboard.dart';
+import 'package:evote/services/services.dart';
+import 'package:evote/services/mobile/voteService.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class Vote extends StatefulWidget {
   final int userId;
@@ -49,84 +48,64 @@ class _VoteState extends State<Vote> with TickerProviderStateMixin {
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
-  void _onSubmitPressed() async {
-    if (widget.candidate.isEmpty) return;
+void _onSubmitPressed() async {
+  if (widget.candidate.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    print("🔐 Token: $token");
+  try {
+    final voteService = VoteService(baseUrl: baseUrl);
+    final token = await voteService.getAuthToken();
 
     if (token == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please login again.")));
+      showSnackBar("Please login again.");
       return;
     }
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://192.168.1.144:8080/api/voting/vote'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          "candidateIds":
-              widget.candidate.map((c) => int.parse(c["id"]!)).toList(),
-          "userId": widget.userId,
-          "userDivision": widget.userDivision,
-        }),
-      );
+    final sortedByRank = List<Map<String, String>>.from(widget.candidate)
+      ..sort((a, b) => (int.tryParse(a['rank'] ?? '999') ?? 999)
+          .compareTo(int.tryParse(b['rank'] ?? '999') ?? 999));
 
-      print("📡 Status Code: ${response.statusCode}");
-      print("📦 Response Body: '${response.body}'");
+    final candidateIds = sortedByRank.map((c) => int.parse(c["id"]!)).toList();
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 400 ||
-          response.statusCode == 403) {
-        if (response.body.isNotEmpty) {
-          final data = jsonDecode(response.body);
+    final result = await voteService.submitVote(
+      candidateIds: candidateIds,
+      userId: widget.userId,
+      userDivision: widget.userDivision,
+      token: token,
+    );
 
-          if (data['success']) {
-            setState(() => showAnimation = true);
-            _controller.repeat(reverse: true);
+    if (result['success'] == true) {
+      setState(() => showAnimation = true);
+      _controller.repeat(reverse: true);
 
-            await Future.delayed(const Duration(seconds: 4));
+      await Future.delayed(const Duration(seconds: 4));
 
-            if (mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder:
-                      (_) => Dashboard(
-                        userId: widget.userId,
-                        userDivision: widget.userDivision,
-                        hasVoted: true,
-                      ),
-                ),
-              );
-            }
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(data['message'] ?? 'Failed to vote')),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Server returned empty response.')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('HTTP Error: ${response.statusCode}')),
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => Dashboard(
+              userId: widget.userId,
+              userDivision: widget.userDivision,
+              hasVoted: true,
+            ),
+          ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Exception: $e')));
+    } else {
+      showSnackBar(result['message'] ?? 'Failed to vote');
     }
+  } catch (e) {
+    showSnackBar(e.toString());
   }
+}
+
+void showSnackBar(String message) {
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+}
 
   @override
   void dispose() {

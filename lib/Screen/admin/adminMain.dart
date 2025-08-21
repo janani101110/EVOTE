@@ -1,4 +1,9 @@
+import 'package:evote/Screen/admin/adminAdmin.dart';
+import 'package:evote/Screen/admin/adminCandidate.dart';
 import 'package:evote/Screen/admin/adminDashboard.dart';
+import 'package:evote/Screen/admin/adminDivision.dart';
+import 'package:evote/Screen/admin/adminResults.dart';
+import 'package:evote/Screen/admin/adminVoters.dart';
 import 'package:evote/widget/adminSidenav.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
@@ -17,17 +22,16 @@ class _AdminmainState extends State<Adminmain> {
   Widget getSelectedScreen(){
     switch (selectPage){
       case 'Candidates':
-      return Text('can');
-       case 'Elections':
-        return Text('Elections Page');
-      case 'Parties':
-        return Text('Parties Page');
+      return Admincandidate();
+       
+      case 'Divisions':
+        return AdminDivision();
       case 'Voters':
-        return Text('Voters Page');
+        return Adminvoters();
       case 'Admins':
-        return Text('Admins Page');
+        return AdminAdmins();
       case 'Results':
-        return Text('Results Page');
+        return Adminresults();
       default:
         return Admindashboard();
       

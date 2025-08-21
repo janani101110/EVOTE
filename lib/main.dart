@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:evote/Screen/adminLogin.dart';
 import 'package:evote/Screen/mobile/language.dart';
-import 'package:evote/localString.dart';
+import 'package:evote/Utils/localString.dart';
 import 'package:evote/widget/background.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

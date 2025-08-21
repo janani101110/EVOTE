@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 
-class CustomTextFormField extends StatelessWidget {
+class CustomTextFormField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final String labelText;
+  final bool? suffixIcon;
 
   const CustomTextFormField({
     super.key,
     required this.controller,
     required this.hintText,
     required this.labelText,
+    this.suffixIcon,
   });
+
+  @override
+  State<CustomTextFormField> createState() => _CustomTextFormFieldState();
+}
+
+class _CustomTextFormFieldState extends State<CustomTextFormField> {
+  bool _obscureText = true;
+
+  void _toggleObscureText() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +42,19 @@ class CustomTextFormField extends StatelessWidget {
         ],
       ),
       child: TextFormField(
-        controller: controller,
+        controller: widget.controller,
+        obscureText: widget.suffixIcon == true ? _obscureText : false,
         decoration: InputDecoration(
-          hintText: hintText,
-          labelText: labelText,
+          hintText: widget.hintText,
+          labelText: widget.labelText,
+          suffixIcon: widget.suffixIcon == true
+              ? IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility_off : Icons.visibility,
+                  ),
+                  onPressed: _toggleObscureText,
+                )
+              : null,
           filled: true,
           fillColor: Colors.white,
           border: const OutlineInputBorder(
