@@ -106,7 +106,7 @@ class _AdminvotersState extends State<Adminvoters> {
       barrierDismissible: !submitting,
       builder: (_) => StatefulBuilder(
         builder: (ctx, setLocal) {
-          // load divisions once
+          
           if (loadingDivs && loadErr == null) {
             _divisionService.list(token: _token!).then((list) {
               if (!ctx.mounted) return;
@@ -278,7 +278,7 @@ class _AdminvotersState extends State<Adminvoters> {
               ),
               const SizedBox(height: 20),
 
-              // Search
+              
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -296,7 +296,7 @@ class _AdminvotersState extends State<Adminvoters> {
               ),
               const SizedBox(height: 20),
 
-              // List
+              
               if (_loading)
                 const Center(
                   child: Padding(
@@ -321,7 +321,7 @@ class _AdminvotersState extends State<Adminvoters> {
                       ? const Center(child: Text('No voters found.'))
                       : Column(
                           children: [
-                            // header row
+                           
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   vertical: 12, horizontal: 8),
@@ -369,7 +369,7 @@ class _AdminvotersState extends State<Adminvoters> {
                                         flex: 2,
                                         child: Text(
                                           v.hasVoted == null
-                                              ? '-' // backend doesn't supply this in VoterResponse
+                                              ? '-' 
                                               : (v.hasVoted! ? 'Yes' : 'No'),
                                         ),
                                       ),

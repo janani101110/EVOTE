@@ -23,8 +23,8 @@ class LeaderboardRow {
 }
 
 class PhaseStatus {
-  final String phase;            // e.g. "Voting", "Counting", "Closed"
-  final DateTime? phaseEndTime;  // for countdown
+  final String phase;            
+  final DateTime? phaseEndTime;  
   final String? electionName;
   PhaseStatus({required this.phase, this.phaseEndTime, this.electionName});
 }
@@ -60,8 +60,6 @@ class AdminDashboardService {
 
   Uri _u(String p) => Uri.parse('$_base$p');
 
-  /// Optional endpoint (if you add one): GET /api/admin/election/status
-  /// Expected JSON: { "phase":"Voting","phaseEndTime":"2025-06-30T17:00:00","electionName":"..." }
   Future<PhaseStatus?> _fetchPhaseStatus(String token) async {
     final url = _u('/api/admin/election/status');
     final res = await _client.get(url, headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'});

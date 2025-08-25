@@ -1,7 +1,7 @@
 import 'package:evote/Screen/mobile/validLogin.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/navbar.dart';
-import 'package:evote/widget/button.dart'; // Import your Button widget
+import 'package:evote/widget/button.dart'; 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -23,7 +23,7 @@ class _LanguageState extends State<Language> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo and text section
+              
               Align(
                 alignment: const Alignment(0.2, -0.3),
                 child: SizedBox(
@@ -69,7 +69,7 @@ class _LanguageState extends State<Language> {
               
               const SizedBox(height: 100),
               
-              // Language selection buttons - Centered
+              // Language selection buttons 
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,

@@ -21,15 +21,31 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isRegistered = false;
 
+
+//login function
   void _handleLogin() async {
-  final nic = _nicController.text.trim();
+  final nic = _nicController.text.trim().toUpperCase();
   final password = _passwordController.text.trim();
+
+  if(nic.isEmpty||password.isEmpty){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('NIC and Password cannot be empty')));
+    return;
+  }
+  final oldNic = RegExp(r'^\d{9}[VX]$') ;
+  final newNic = RegExp(r'^\d{12}$');
+
+if (!(oldNic.hasMatch(nic) || newNic.hasMatch(nic))) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('NIC format is wrong')),
+    );
+    return;
+  }
 
   try {
     final loginService = LoginService(baseUrl: baseUrl);
-    final result = await loginService.login(nic, password);
+    final result = await loginService.login(nic, password); //importing the service
 
-    if (result['success'] == true) {
+    if (result['success'] == true) { //mapping the response
       final user = result['user'];
       final userId = user['id'];
       final division = user['division'] ?? {};
@@ -46,7 +62,7 @@ class _LoginState extends State<Login> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => Biometric(
+            builder: (context) => Biometric( //passing the needed attributes
               userId: userId,
               userDivision: divisionName,
               hasVoted: hasVoted,

@@ -6,19 +6,19 @@ import 'package:evote/services/mobile/voteService.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
 import 'package:evote/widget/navbar.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import 'package:get/get.dart';
 
 class Vote extends StatefulWidget {
   final int userId;
-  final String userDivision; // ✅ Add this
+  final String userDivision; 
   final List<Map<String, String>> candidate;
 
   const Vote({
     super.key,
     required this.candidate,
     required this.userId,
-    required this.userDivision, // ✅ Add this
+    required this.userDivision,
   });
 
   @override
@@ -48,25 +48,27 @@ class _VoteState extends State<Vote> with TickerProviderStateMixin {
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
+
+//voting function
 void _onSubmitPressed() async {
   if (widget.candidate.isEmpty) return;
 
   try {
     final voteService = VoteService(baseUrl: baseUrl);
-    final token = await voteService.getAuthToken();
+    final token = await voteService.getAuthToken();//importing service to loa token
 
     if (token == null) {
       showSnackBar("Please login again.");
       return;
     }
 
-    final sortedByRank = List<Map<String, String>>.from(widget.candidate)
+    final sortedByRank = List<Map<String, String>>.from(widget.candidate) //sorting by rank
       ..sort((a, b) => (int.tryParse(a['rank'] ?? '999') ?? 999)
           .compareTo(int.tryParse(b['rank'] ?? '999') ?? 999));
 
     final candidateIds = sortedByRank.map((c) => int.parse(c["id"]!)).toList();
 
-    final result = await voteService.submitVote(
+    final result = await voteService.submitVote( //importing the service
       candidateIds: candidateIds,
       userId: widget.userId,
       userDivision: widget.userDivision,
@@ -86,7 +88,7 @@ void _onSubmitPressed() async {
             builder: (_) => Dashboard(
               userId: widget.userId,
               userDivision: widget.userDivision,
-              hasVoted: true,
+              hasVoted: true, // passing the hasvoted true
             ),
           ),
         );
@@ -228,7 +230,7 @@ void showSnackBar(String message) {
           Button(
             text: 'submit'.tr,
             onPressed: _onSubmitPressed,
-            isCancel: false, // Not a cancel button
+            isCancel: false, 
           ),
 
           const SizedBox(height: 60),
@@ -248,7 +250,7 @@ void showSnackBar(String message) {
               );
             },
             isCancel:
-                true, // This is a cancel button, will use the cancel style
+                true, 
           ),
         ],
       ),

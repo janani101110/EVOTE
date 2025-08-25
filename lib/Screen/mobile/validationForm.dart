@@ -18,16 +18,35 @@ class Validationform extends StatefulWidget {
 }
 
 class _ValidationformState extends State<Validationform> {
-  final TextEditingController _nicController = TextEditingController();
+  final TextEditingController _nicController = TextEditingController(); //controllers for input fields
   final TextEditingController _nameController = TextEditingController();
   bool _isRegistered = false;
 
+
+// validation function
  Future<void> _handleRegistration() async {
-  final nic = _nicController.text.trim();
+  final nic = _nicController.text.trim().toUpperCase();
+  final name = _nameController.text.trim();
+
+  if (nic.isEmpty ||name.isEmpty ){
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('NIC and Name should not be empty')));
+    return;
+  }
+  
+  final oldNic = RegExp(r'^\d{9}[VX]$') ;
+  final newNic = RegExp(r'^\d{12}$');
+
+  if (!(oldNic.hasMatch(nic) || newNic.hasMatch(nic))) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('NIC format is wrong')),
+    );
+    return;
+  }
+  
 
   try {
-    final validateService = Validateservice(baseUrl: baseUrl);
-    final result = await validateService.validateNIC(nic);
+    final validateService = Validateservice(baseUrl: baseUrl); 
+    final result = await validateService.validateNIC(nic);// importing the service
 
     setState(() {
       _isRegistered = result['success'] == true;
@@ -54,6 +73,8 @@ class _ValidationformState extends State<Validationform> {
       );
     }
   }
+
+  
 }
 
   @override
@@ -76,10 +97,9 @@ class _ValidationformState extends State<Validationform> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 20),
-                    // Note: You need to add lottie dependency to pubspec.yaml
-                    // and import 'package:lottie/lottie.dart';
+                  
                     Lottie.asset(
-                      'assets/Done.json', // Path to your JSON file
+                      'assets/Done.json', 
                       width: 200,
                       height: 200,
                       fit: BoxFit.contain,
@@ -107,6 +127,7 @@ class _ValidationformState extends State<Validationform> {
                       controller: _nicController,
                       hintText: "Enter NIC",
                       labelText: "NIC",
+                      
                     ),
                     const SizedBox(height: 25),
                     CustomTextFormField(

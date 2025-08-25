@@ -56,7 +56,7 @@ Future<Map<String, dynamic>> logout() async {
     await prefs.remove('user_id');
     await prefs.remove('user_division');
     await prefs.remove('has_voted');
-
+ 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return {

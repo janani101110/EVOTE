@@ -24,10 +24,16 @@ class _ButtonState extends State<Button> {
       child: Container(
         height: 50,
         width: 200,
+        
+
         decoration: widget.isCancel == true
             ? BoxDecoration(
+              border: Border.all(
+                color: Colors.purple,
+              ),
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
+                
               )
             : BoxDecoration(
                 gradient: LinearGradient(
@@ -40,6 +46,7 @@ class _ButtonState extends State<Button> {
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
+              
         child: ElevatedButton(
           onPressed: widget.onPressed,
           style: ElevatedButton.styleFrom(
@@ -49,7 +56,10 @@ class _ButtonState extends State<Button> {
           ),
           child: Text(
             widget.text,
-            style: const TextStyle(color: Colors.white),
+            style: widget.isCancel==false
+            ?const TextStyle(color: Colors.white)
+            :const TextStyle(color: Colors.purple)
+            
           ),
         ),
       ),

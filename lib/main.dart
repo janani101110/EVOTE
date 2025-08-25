@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       translations: Localstrings(),
-      locale: Locale('en','US'),
+      locale: Locale('en','US'), //language loading
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       
@@ -49,14 +49,13 @@ class _MyHomePageState extends State<MyHomePage> {
     Future.delayed(const Duration(seconds: 3), () {
       // Check if the platform is mobile or web
       if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-        // For web, you can navigate differently or show a different page
-        // For now, navigating to the same Language screen
+       
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Adminlogin()),
         );
       } else {
-        // For mobile, navigate to the same Language screen
+        // For mobile, navigate to the Language screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Language()),

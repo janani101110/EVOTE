@@ -28,7 +28,7 @@ class _PasswordState extends State<Password> {
   final password = _passwordController.text.trim();
   final confirmPassword = _passwordCController.text.trim();
 
-  // Validation
+  
   if (password.isEmpty || confirmPassword.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Password fields cannot be empty")),

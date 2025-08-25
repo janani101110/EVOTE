@@ -162,7 +162,7 @@ class _AdminDivisionState extends State<AdminDivision> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+             
               Container(
                 height: 100,
                 width: double.infinity,
@@ -223,7 +223,7 @@ class _AdminDivisionState extends State<AdminDivision> {
 
               const SizedBox(height: 25),
 
-              // Content
+              
               if (_isLoadingList)
                 const Padding(
                   padding: EdgeInsets.only(top: 40),

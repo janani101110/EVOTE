@@ -28,14 +28,13 @@ class _DashboardState extends State<Dashboard>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   String? userDivision;
-  bool hasVoted = false; // Initialize with default value
+  bool hasVoted = false;
 
   @override
   void initState() {
     super.initState();
     _initAnimation();
 
-    // ✅ Assign passed values to local state
     userDivision = widget.userDivision;
     hasVoted = widget.hasVoted;
 
@@ -62,36 +61,35 @@ class _DashboardState extends State<Dashboard>
     super.dispose();
   }
 
-void _logout() async {
-  final authService = LoginService(baseUrl: baseUrl);
+  //logout function only comes if the hasVoted==true
+  void _logout() async {
+    final authService = LoginService(baseUrl: baseUrl);
 
-  try {
-    final result = await authService.logout();
+    try {
+      final result = await authService.logout(); //importing the service
 
-    if (mounted) {
-      // Check if result contains success key and it's true
-      final bool success = result['success'] == true;
+      if (mounted) {
+        final bool success = result['success'] == true;
 
-      if(success){
-         Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => Language()),
-        (route) => false,
-      );
+        if (success) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => Language()),
+            (route) => false,
+          );
+        }
       }
-     
-    }
-  } catch (e) {
-    if (mounted) {
-      // Still navigate to login screen on error
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => Language()),
-        (route) => false,
-      );
+    } catch (e) {
+      if (mounted) {
+        // Still navigate to login screen on error
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => Language()),
+          (route) => false,
+        );
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -129,11 +127,13 @@ void _logout() async {
                 _buildContainer('election'.tr),
                 const SizedBox(height: 30),
                 widget.hasVoted
-                    ? _buildThankYouButton()
-                    : _buildDivision(widget.userDivision),
+                    ? _buildThankYouButton() // if voted
+                    : _buildDivision(widget.userDivision), //if not voted
 
                 const SizedBox(height: 50),
-                hasVoted ? _buildlogout() : _buildVoteButton(),
+                hasVoted
+                    ? _buildlogout() //if voted
+                    : _buildVoteButton(), // if not voted
               ],
             ),
           ),
@@ -178,9 +178,7 @@ void _logout() async {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.purple,
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Center(
         child: Text(

@@ -35,9 +35,9 @@ class _AdminresultsState extends State<Adminresults> {
   }
 
   Future<void> _init() async {
-    final p = await SharedPreferences.getInstance();
-    _token = p.getString('admin_jwt');
-    _role = p.getString('admin_role');
+    final pref = await SharedPreferences.getInstance();
+    _token = pref.getString('admin_jwt');
+    _role = pref.getString('admin_role');
 
     if (_token == null || _token!.isEmpty) {
       setState(() {
@@ -64,12 +64,12 @@ class _AdminresultsState extends State<Adminresults> {
     }
   }
 
-  String _winnerName(PreferenceResult r) {
-    if (r.winnerId == null) return '—';
-    final all = [...r.firstPref, ...r.secondPref];
+  String _winnerName(PreferenceResult result) {
+    if (result.winnerId == null) return '—';
+    final all = [...result.firstPref, ...result.secondPref];
     final hit = all.firstWhere(
-      (c) => c.id == r.winnerId,
-      orElse: () => CountItem(id: r.winnerId!, name: 'Winner #${r.winnerId}', count: 0),
+      (c) => c.id == result.winnerId,
+      orElse: () => CountItem(id: result.winnerId!, name: 'Winner #${result.winnerId}', count: 0),
     );
     return hit.name;
   }
@@ -84,9 +84,9 @@ class _AdminresultsState extends State<Adminresults> {
     return s.length > 14 ? '${s.substring(0, 14)}…' : s;
   }
 
- Widget _overallCard(PreferenceResult r) {
-  final first = r.firstPref;
-  final second = r.secondPref;
+ Widget _overallCard(PreferenceResult result) {
+  final first = result.firstPref;
+  final second = result.secondPref;
 
     final ids = <int>[];
     for (final c in first) {
@@ -137,7 +137,7 @@ class _AdminresultsState extends State<Adminresults> {
               Icon(Icons.emoji_events, color: Colors.amber[700], size: 28),
               const SizedBox(width: 8),
               Text(
-                'Overall Winner By First Preference: ${_winnerName(r)}',
+                'Overall Winner By First Preference: ${_winnerName(result)}',
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],

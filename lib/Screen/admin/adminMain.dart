@@ -4,6 +4,7 @@ import 'package:evote/Screen/admin/adminDashboard.dart';
 import 'package:evote/Screen/admin/adminDivision.dart';
 import 'package:evote/Screen/admin/adminResults.dart';
 import 'package:evote/Screen/admin/adminVoters.dart';
+import 'package:evote/Screen/adminLogin.dart';
 import 'package:evote/widget/adminSidenav.dart';
 import 'package:evote/widget/navbar.dart';
 import 'package:flutter/material.dart';
@@ -17,13 +18,13 @@ class Adminmain extends StatefulWidget {
 }
 
 class _AdminmainState extends State<Adminmain> {
- String selectPage = 'Dashboard';
+  String selectPage = 'Dashboard';
 
-  Widget getSelectedScreen(){
-    switch (selectPage){
+  Widget getSelectedScreen() {
+    switch (selectPage) {
       case 'Candidates':
-      return Admincandidate();
-       
+        return Admincandidate();
+
       case 'Divisions':
         return AdminDivision();
       case 'Voters':
@@ -34,30 +35,46 @@ class _AdminmainState extends State<Adminmain> {
         return Adminresults();
       default:
         return Admindashboard();
-      
     }
   }
+  void _logoutToLogin() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const Adminlogin()),
+      (route) => false, // remove all previous routes
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
           Navbar(),
-          Expanded(child: Row(
-            children: [
-              Adminsidenav(onItemSelected: (item){
-                setState(() {
-                  selectPage = item;
-                });
-              },),
-              Expanded(child: Container(
-                color: const Color(0xFFF4F6F8),
-                padding: EdgeInsets.all(16.0),
-                child: getSelectedScreen(),
-              ))
-            ],
-          ))
-        ]
+          Expanded(
+            child: Row(
+              children: [
+                Adminsidenav(
+                  onItemSelected: (item) {
+                    if (item == 'Exit') {
+                      _logoutToLogin();
+                      return;
+                    }
+                    setState(() {
+                      selectPage = item;
+                    });
+                  },
+                ),
+                Expanded(
+                  child: Container(
+                    color: const Color(0xFFF4F6F8),
+                    padding: EdgeInsets.all(16.0),
+                    child: getSelectedScreen(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

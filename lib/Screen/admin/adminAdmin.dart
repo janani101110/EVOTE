@@ -14,8 +14,8 @@ class AdminAdmins extends StatefulWidget {
 }
 
 class _AdminAdminsState extends State<AdminAdmins> {
-  final _svc = AdminManagementService(baseUrl: baseUrl);
-  final _divSvc = DivisionService(baseUrl: baseUrl);
+  final _servie = AdminManagementService(baseUrl: baseUrl);
+  final _divisionservice = DivisionService(baseUrl: baseUrl);
 
   String? _token;
   String? _role;
@@ -32,9 +32,9 @@ class _AdminAdminsState extends State<AdminAdmins> {
   }
 
   Future<void> _init() async {
-    final p = await SharedPreferences.getInstance();
-    _token = p.getString('admin_jwt');
-    _role = p.getString('admin_role');
+    final pref = await SharedPreferences.getInstance();
+    _token = pref.getString('admin_jwt');
+    _role = pref.getString('admin_role');
 
     if (_token == null || _token!.isEmpty) {
       setState(() {
@@ -52,7 +52,7 @@ class _AdminAdminsState extends State<AdminAdmins> {
       _error = null;
     });
     try {
-      final list = await _svc.list(token: _token!);
+      final list = await _servie.list(token: _token!);
       setState(() => _admins = list);
     } catch (e) {
       setState(() => _error = e.toString());
@@ -60,7 +60,20 @@ class _AdminAdminsState extends State<AdminAdmins> {
       setState(() => _loading = false);
     }
   }
-
+String? _emailValidator(email) {
+    const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+    if (!RegExp(emailRegex).hasMatch(email)) {
+      _showSnackBar("Please enter a valid email address.");
+      return "Please enter a valid email address.";
+    }
+    return null;
+  }
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
   void _openAddDialog() {
     if (!_isSuperAdmin) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -76,8 +89,8 @@ class _AdminAdminsState extends State<AdminAdmins> {
     String role = 'DIVISIONAL_ADMIN'; // default
     int? divisionId;
 
-    bool loadingDivs = true;
-    String? divError;
+    bool loadingDivisions = true;
+    String? divisionError;
     bool submitting = false;
 
     List<DivisionDto> divisions = [];
@@ -88,21 +101,21 @@ class _AdminAdminsState extends State<AdminAdmins> {
       builder:
           (_) => StatefulBuilder(
             builder: (ctx, setLocal) {
-              if (loadingDivs && divError == null) {
-                _divSvc
+              if (loadingDivisions && divisionError == null) {
+                _divisionservice
                     .list(token: _token!)
                     .then((list) {
                       if (!ctx.mounted) return;
                       setLocal(() {
                         divisions = list;
-                        loadingDivs = false;
+                        loadingDivisions = false;
                       });
                     })
                     .catchError((e) {
                       if (!ctx.mounted) return;
                       setLocal(() {
-                        divError = e.toString();
-                        loadingDivs = false;
+                        divisionError = e.toString();
+                        loadingDivisions = false;
                       });
                     });
               }
@@ -112,14 +125,14 @@ class _AdminAdminsState extends State<AdminAdmins> {
                 content: SizedBox(
                   width: 420,
                   child:
-                      loadingDivs
+                      loadingDivisions
                           ? const SizedBox(
                             height: 80,
                             child: Center(child: CircularProgressIndicator()),
                           )
-                          : divError != null
+                          : divisionError != null
                           ? Text(
-                            divError!,
+                            divisionError!,
                             style: const TextStyle(color: Colors.red),
                           )
                           : Form(
@@ -144,13 +157,7 @@ class _AdminAdminsState extends State<AdminAdmins> {
                                   ),
                                   keyboardType: TextInputType.emailAddress,
                                   onSaved: (v) => email = v?.trim() ?? '',
-                                  validator: (v) {
-                                    final t = v?.trim() ?? '';
-                                    if (t.isEmpty) return 'Enter email';
-                                    if (!t.contains('@'))
-                                      return 'Enter a valid email';
-                                    return null;
-                                  },
+                                  validator: _emailValidator,
                                 ),
                                 TextFormField(
                                   decoration: const InputDecoration(
@@ -196,7 +203,7 @@ class _AdminAdminsState extends State<AdminAdmins> {
                                   ],
                                   onChanged: (v) => divisionId = v,
                                   decoration: const InputDecoration(
-                                    labelText: 'Division (optional)',
+                                    labelText: 'Division',
                                   ),
                                 ),
                               ],
@@ -210,7 +217,7 @@ class _AdminAdminsState extends State<AdminAdmins> {
                   ),
                   ElevatedButton(
                     onPressed:
-                        submitting || loadingDivs || divError != null
+                        submitting || loadingDivisions || divisionError != null
                             ? null
                             : () async {
                               if (!formKey.currentState!.validate()) return;
@@ -218,7 +225,7 @@ class _AdminAdminsState extends State<AdminAdmins> {
 
                               setLocal(() => submitting = true);
                               try {
-                                await _svc.create(
+                                await _servie.create(
                                   token: _token!,
                                   fullName: fullName,
                                   email: email,
@@ -259,13 +266,13 @@ class _AdminAdminsState extends State<AdminAdmins> {
     );
   }
 
-  Future<void> _confirmDeactivate(AdminUserDto a) async {
+  Future<void> _confirmDeactivate(AdminUserDto admin) async {
     final ok = await showDialog<bool>(
       context: context,
       builder:
           (_) => AlertDialog(
             title: const Text('Deactivate admin?'),
-            content: Text('Are you sure you want to deactivate ${a.fullName}?'),
+            content: Text('Are you sure you want to deactivate ${admin.fullName}?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -281,11 +288,11 @@ class _AdminAdminsState extends State<AdminAdmins> {
     if (ok != true) return;
 
     try {
-      await _svc.deactivate(token: _token!, id: a.id);
+      await _servie.deactivate(token: _token!, id: admin.id);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('${a.fullName} deactivated')));
+      ).showSnackBar(SnackBar(content: Text('${admin.fullName} deactivated')));
       _fetch();
     } catch (e) {
       if (!mounted) return;
@@ -295,13 +302,13 @@ class _AdminAdminsState extends State<AdminAdmins> {
     }
   }
 
-  Future<void> _confirmActivate(AdminUserDto a) async {
+  Future<void> _confirmActivate(AdminUserDto admin) async {
     final ok = await showDialog<bool>(
       context: context,
       builder:
           (_) => AlertDialog(
             title: const Text('Activate admin?'),
-            content: Text('Are you sure you want to activate ${a.fullName}?'),
+            content: Text('Are you sure you want to activate ${admin.fullName}?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -317,11 +324,11 @@ class _AdminAdminsState extends State<AdminAdmins> {
     if (ok != true) return;
 
     try {
-      await _svc.activate(token: _token!, id: a.id);
+      await _servie.activate(token: _token!, id: admin.id);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('${a.fullName} activated')));
+      ).showSnackBar(SnackBar(content: Text('${admin.fullName} activated')));
       _fetch();
     } catch (e) {
       if (!mounted) return;
@@ -417,15 +424,15 @@ class _AdminAdminsState extends State<AdminAdmins> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _admins.length,
                   itemBuilder: (context, i) {
-                    final a = _admins[i];
+                    final admin = _admins[i];
                     return Card(
                       child: ListTile(
-                        title: Text('${a.fullName}  •  ${a.role}'),
+                        title: Text('${admin.fullName}  •  ${admin.role}'),
                         subtitle: Text(
-                          a.email +
-                              (a.divisionId == null
+                          admin.email +
+                              (admin.divisionId == null
                                   ? ''
-                                  : '  •  Division ID: ${a.divisionId}'),
+                                  : '  •  Division ID: ${admin.divisionId}'),
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -437,25 +444,25 @@ class _AdminAdminsState extends State<AdminAdmins> {
                               ),
                               decoration: BoxDecoration(
                                 color:
-                                    a.active
+                                    admin.active
                                         ? Colors.green[100]
                                         : Colors.red[100],
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Text(a.active ? 'Active' : 'Inactive'),
+                              child: Text(admin.active ? 'Active' : 'Inactive'),
                             ),
                             const SizedBox(width: 12),
-                            if (a.active)
+                            if (admin.active)
                               IconButton(
                                 tooltip: 'Deactivate',
                                 icon: const Icon(Icons.person_off),
-                                onPressed: () => _confirmDeactivate(a),
+                                onPressed: () => _confirmDeactivate(admin),
                               )
                             else
                               IconButton(
                                 tooltip: 'Activate',
                                 icon: const Icon(Icons.person_add_alt_1),
-                                onPressed: () => _confirmActivate(a),
+                                onPressed: () => _confirmActivate(admin),
                               ),
                           ],
                         ),

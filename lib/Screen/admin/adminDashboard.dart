@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:evote/widget/piechart.dart';
 
-const FirstPrefColor = Color(0xFF6F2C91); // purple
-const SecondPrefColor = Color(0xFF2CA58D); // teal
+const firstPrefColor = Color(0xFF6F2C91);
+const secondPrefColor = Color(0xFF2CA58D);
 
 class Admindashboard extends StatefulWidget {
   const Admindashboard({super.key});
@@ -16,18 +16,16 @@ class Admindashboard extends StatefulWidget {
 }
 
 class _AdmindashboardState extends State<Admindashboard> {
-  final _svc = AdminDashboardService();
+  final _service = AdminDashboardService();
   Timer? _poller;
 
   DashboardData? _data;
   String? _token;
   String? _role;
 
-  // countdown
   String currentPhase = 'Voting';
   DateTime? phaseEndTime;
 
-  // --- analytics (client-side only) ---
   final List<_Point> _turnoutHistory = [];
   final Map<String, int> _lastTotals = {};
   List<_Mover> _topMovers = [];
@@ -38,15 +36,13 @@ class _AdmindashboardState extends State<Admindashboard> {
   void initState() {
     super.initState();
     _bootstrap();
-    // _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdown());
   }
 
   Future<void> _bootstrap() async {
-    final p = await SharedPreferences.getInstance();
-    _token = p.getString('admin_jwt');
-    _role = p.getString('admin_role');
+    final pref = await SharedPreferences.getInstance();
+    _token = pref.getString('admin_jwt');
+    _role = pref.getString('admin_role');
 
-    // start polling if authenticated
     if (_token == null || _token!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Not authenticated. Please login.')),
@@ -64,7 +60,7 @@ class _AdmindashboardState extends State<Admindashboard> {
 
   Future<void> _loadOnce() async {
     try {
-      final d = await _svc.load(token: _token!);
+      final d = await _service.load(token: _token!);
       setState(() {
         final now = DateTime.now();
 
@@ -116,15 +112,6 @@ class _AdmindashboardState extends State<Admindashboard> {
     }
   }
 
-  // void _updateCountdown() {
-  //   if (phaseEndTime == null) return;
-  //   final diff = phaseEndTime!.difference(DateTime.now());
-  //   setState(() {
-  //     timeLeft = diff.isNegative ? Duration.zero : diff;
-  //     if (diff.isNegative) currentPhase = 'Counting';
-  //   });
-  // }
-
   @override
   void dispose() {
     _poller?.cancel();
@@ -145,7 +132,6 @@ class _AdmindashboardState extends State<Admindashboard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header/status
             Container(
               height: 100,
               width: double.infinity,
@@ -245,6 +231,7 @@ class _AdmindashboardState extends State<Admindashboard> {
                 const SizedBox(width: 24),
 
                 // Leaderboard (live)
+                // Leaderboard (based on first preferences only)
                 Container(
                   width: 350,
                   height: 500,
@@ -266,7 +253,7 @@ class _AdmindashboardState extends State<Admindashboard> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Text(
-                        'Leader Board',
+                        'Leader Board (First Preferences)',
                         style: TextStyle(
                           fontSize: 20,
                           color: Color.fromARGB(255, 26, 1, 123),
@@ -290,16 +277,31 @@ class _AdmindashboardState extends State<Admindashboard> {
                                         ),
                                       ),
                                   itemBuilder: (context, i) {
-                                    final row = leaderboard[i];
+                                    // Sort by first preferences in descending order
+                                    final sortedLeaderboard =
+                                        List<LeaderboardRow>.from(
+                                          leaderboard,
+                                        )..sort(
+                                          (a, b) => b.first.compareTo(a.first),
+                                        );
+
+                                    final row = sortedLeaderboard[i];
                                     return Row(
                                       children: [
-                                        const Icon(
-                                          Icons.how_to_vote,
-                                          color: Color.fromARGB(
-                                            255,
-                                            26,
-                                            1,
-                                            123,
+                                        // Position indicator
+                                        Container(
+                                          width: 24,
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            '${i + 1}',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color:
+                                                  i == 0
+                                                      ? firstPrefColor
+                                                      : Colors.grey[700],
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(width: 10),
@@ -320,18 +322,14 @@ class _AdmindashboardState extends State<Admindashboard> {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
+                                        // First preference count
                                         _Badge(
                                           label: '1st',
                                           value: row.first,
-                                          color: FirstPrefColor,
+                                          color: firstPrefColor,
                                         ),
                                         const SizedBox(width: 6),
-                                        _Badge(
-                                          label: '2nd',
-                                          value: row.second,
-                                          color: SecondPrefColor,
-                                        ),
-                                        const SizedBox(width: 6),
+                                        
                                         Text(
                                           '${row.total}',
                                           style: const TextStyle(

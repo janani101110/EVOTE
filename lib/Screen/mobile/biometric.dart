@@ -1,5 +1,3 @@
-
-
 import 'package:evote/Screen/mobile/dashboard.dart';
 import 'package:evote/widget/background.dart';
 import 'package:evote/widget/button.dart';
@@ -26,18 +24,18 @@ class Biometric extends StatefulWidget {
 
 class _BiometricState extends State<Biometric> {
   late final LocalAuthentication auth;
-  bool _supportState = false; 
+  bool _supportState = false;
 
   @override
   void initState() {
     super.initState();
     auth = LocalAuthentication();
     auth.isDeviceSupported().then(
-          (bool isSupported) => setState(() {
-            _supportState = isSupported;
-          }),
-          
-        );
+      // check whether the device has security support
+      (bool isSupported) => setState(() {
+        _supportState = isSupported;
+      }),
+    );
   }
 
   @override
@@ -47,66 +45,68 @@ class _BiometricState extends State<Biometric> {
       body: Stack(
         children: [
           Background(),
-Center(
-  child: Column(
-    mainAxisSize: MainAxisSize.max,
-    children: [
-      const SizedBox(height: 245),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                const SizedBox(height: 245),
 
-      _supportState
-          ? const Text('This is supported',style: TextStyle(color: Colors.purple,fontSize: 20,fontWeight: FontWeight.bold),)
-          : const Text('not supported'),
-      const SizedBox(height: 20),
-      const Icon(
-        Icons.fingerprint,
-        size: 100,
-        color: Colors.purpleAccent,
-      ),
-      const SizedBox(height: 80),
-      Button(
-        onPressed: _authenticate,
-        text: 'Click to authenticate',
-      ),
-    ],
-  ),
-),
+                _supportState
+                    ? const Text(
+                      'This is supported',
+                      style: TextStyle(
+                        color: Colors.purple,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                    : const Text('not supported'),
+                const SizedBox(height: 20),
+                const Icon(
+                  Icons.fingerprint,
+                  size: 100,
+                  color: Colors.purpleAccent,
+                ),
+                const SizedBox(height: 80),
+                Button(onPressed: _authenticate, text: 'Click to authenticate'),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   Future<void> _authenticate() async {
-  try {
-    await auth.stopAuthentication();
+    try {
+      await auth.stopAuthentication();
 
-    final bool authenticated = await auth.authenticate(
-      localizedReason: 'Please authenticate to proceed',
-      options: const AuthenticationOptions(
-        biometricOnly: false, // ✅ Allow fallback to PIN/Pattern/Passcode
-        useErrorDialogs: true,
-        stickyAuth: true,
-      ),
-    );
-
-    if (authenticated && mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute( 
-          builder: (context) => Dashboard(
-            userId: widget.userId,
-            userDivision: widget.userDivision,
-            hasVoted: widget.hasVoted,
-          ),
+      final bool authenticated = await auth.authenticate(
+        localizedReason: 'Please authenticate to proceed',
+        options: const AuthenticationOptions(
+          biometricOnly: false, // able to use pin or password
+          useErrorDialogs: true,
+          stickyAuth: true, // the popup that comes 
         ),
       );
+
+      if (authenticated && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => Dashboard(
+                  userId: widget.userId,
+                  userDivision: widget.userDivision,
+                  hasVoted: widget.hasVoted,
+                ),
+          ),
+        );
+      }
+    } on PlatformException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Authentication error: ${e.message}")),
+      );
     }
-  } on PlatformException catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Authentication error: ${e.message}")),
-    );
   }
-}
-
-
-  
 }

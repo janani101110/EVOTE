@@ -44,6 +44,7 @@ class _CustomTextFormFieldState extends State<CustomTextFormField> {
       child: TextFormField(
         controller: widget.controller,
         obscureText: widget.suffixIcon == true ? _obscureText : false,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(
           hintText: widget.hintText,
           labelText: widget.labelText,

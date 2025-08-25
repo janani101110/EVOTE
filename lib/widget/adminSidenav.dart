@@ -20,6 +20,7 @@ class _AdminsidenavState extends State<Adminsidenav> {
     'Voters',
     'Admins',
     'Results',
+    'Exit',
   ];
 
   @override
@@ -62,7 +63,7 @@ class _AdminsidenavState extends State<Adminsidenav> {
                     setState(() {
                       selectedItem = item;
                     });
-                    widget.onItemSelected(item); // callback to parent
+                    widget.onItemSelected(item); 
                   },
                   selected: isSelected,
                   selectedTileColor: Colors.orange.withOpacity(0.2),

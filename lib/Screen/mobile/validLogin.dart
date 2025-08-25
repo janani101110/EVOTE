@@ -48,7 +48,7 @@ class _ValidloginState extends State<Validlogin> {
                )
               ),
               const SizedBox(height: 25,),
-              Button(text: "reg".tr,
+              Button(text: "reg".tr, //language translation
               onPressed: () => Navigator.push(context, 
               MaterialPageRoute(builder: (context)=>const Validationform())
               ),

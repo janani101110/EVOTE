@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:evote/Screen/admin/adminMain.dart';
-import 'package:evote/Screen/desktop/desktop_candidate.dart';
+import 'package:evote/Screen/desktop/desktop_validation.dart';
 import 'package:evote/services/admin/adminloginservice.dart';
 import 'package:evote/services/services.dart';
 import 'package:evote/widget/background.dart';
@@ -19,16 +19,16 @@ class Adminlogin extends StatefulWidget {
 
 class _AdminloginState extends State<Adminlogin> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _pwdCtrl = TextEditingController();
+  final _emailController = TextEditingController();
+  final _pwdController = TextEditingController();
   final _auth = AdminAuthService(baseUrl: baseUrl);
 
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _pwdCtrl.dispose();
+    _emailController.dispose();
+    _pwdController.dispose();
     super.dispose();
   }
 
@@ -37,9 +37,9 @@ Future<void> _doLogin() async {
 
   setState(() => _isLoading = true);
   try {
-    final result = await _auth.login(_emailCtrl.text.trim(), _pwdCtrl.text);
+    final result = await _auth.login(_emailController.text.trim(), _pwdController.text);
 
-    // Persist token & auth info for later requests
+    // save token & auth info for later requests in sharedpreference
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('admin_jwt', result.token);
     await prefs.setString('admin_role', result.role);
@@ -58,7 +58,7 @@ Future<void> _doLogin() async {
     if (result.role == 'SUPER_ADMIN') {
       nextScreen = const Adminmain();
     } else {
-      nextScreen = const DesktopCandidate(); // Make sure to import DesktopCandidate
+      nextScreen = const DesktopValidation(); 
     }
 
     Navigator.pushReplacement(
@@ -80,18 +80,27 @@ Future<void> _doLogin() async {
   }
 }
 
-  String? _emailValidator(String? v) {
-    final value = v?.trim() ?? '';
-    if (value.isEmpty) return 'Email is required';
-    if (!value.contains('@')) return 'Enter a valid email';
+  String? _emailValidator(email) {
+    const emailRegex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$';
+    if (!RegExp(emailRegex).hasMatch(email)) {
+      _showSnackBar("Please enter a valid email address.");
+      return "Please enter a valid email address.";
+    }
     return null;
-    // For stronger validation you can use a proper regex.
   }
+  
 
   String? _passwordValidator(String? v) {
     final value = v ?? '';
     if (value.isEmpty) return 'Password is required';
     return null;
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -141,7 +150,7 @@ Future<void> _doLogin() async {
                       SizedBox(
                         width: 300,
                         child: TextFormField(
-                          controller: _emailCtrl,
+                          controller: _emailController,
                           obscureText: false,
                           keyboardType: TextInputType.emailAddress,
                           validator: _emailValidator,
@@ -159,7 +168,7 @@ Future<void> _doLogin() async {
                       SizedBox(
                         width: 300,
                         child: TextFormField(
-                          controller: _pwdCtrl,
+                          controller: _pwdController,
                           obscureText: true,
                           validator: _passwordValidator,
                           decoration: const InputDecoration(

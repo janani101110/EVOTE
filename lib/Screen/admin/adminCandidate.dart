@@ -174,7 +174,7 @@ class _AdmincandidateState extends State<Admincandidate> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+             
               Container(
                 height: 100,
                 width: double.infinity,
@@ -237,7 +237,7 @@ class _AdmincandidateState extends State<Admincandidate> {
 
               const SizedBox(height: 20),
 
-              // Body content
+             
               if (_isLoadingList)
                 const Center(child: Padding(
                   padding: EdgeInsets.only(top: 40.0),
